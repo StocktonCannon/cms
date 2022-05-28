@@ -12,9 +12,13 @@ export class ContactListComponent implements OnInit {
   contacts: Contact[] = [];
 
   constructor(private contactService: ContactService) { }
-
-  ngOnInit() {
+  ngOnInit(): void {
     this.contacts = this.contactService.getContacts();
+    this.contactService.contactChangedEvent.subscribe(
+      (contactArray:Contact[]) => {
+        this.contacts = contactArray;
+      })
+    
   }
 
   onSelected(contact: Contact) {

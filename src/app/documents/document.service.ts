@@ -9,7 +9,7 @@ export class DocumentService {
   private documents: Document[] = [];
 
   documentSelectedEvent = new EventEmitter<Document>();
-  documentChangedEvent = new EventEmitter<Document>();
+  documentChangedEvent = new EventEmitter<Document[]>();
 
   constructor() { 
     this.documents = MOCKDOCUMENTS;
