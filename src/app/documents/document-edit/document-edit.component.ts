@@ -1,4 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { NgForm } from '@angular/forms';
+import { ActivatedRoute, Params, Router } from '@angular/router';
+import { Document } from '../document.model';
+import { DocumentService } from '../document.service';
 
 @Component({
   selector: 'cms-document-edit',
@@ -6,10 +10,63 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./document-edit.component.css']
 })
 export class DocumentEditComponent implements OnInit {
+  @ViewChild('f',{static:false}) signupForm: NgForm;
+  originalDocument: Document;
+  document: Document;
+  name: string = "name";
+  description: string = 'description';
+  url: string = 'url'
+  editMode: boolean = false;
+  id: string;
 
-  constructor() { }
+  
+constructor(
+  private documentService: DocumentService,
+  private router: Router,
+  private route: ActivatedRoute) {
 
-  ngOnInit(): void {
+}
+
+  ngOnInit() {
+   this.route.params.subscribe((params:Params)=> {
+     this.id = params['id']
+     if (!this.id){
+       this.editMode = false;
+       return
+     }
+     this.originalDocument = this.documentService.getDocument(this.id);
+
+     if (!this.originalDocument) {
+       return;
+     }
+
+     this.editMode = true;
+     this.document = JSON.parse(JSON.stringify(this.originalDocument));
+
+
+   })
+  }
+
+  onCancel(){
+    this.router.navigate(['/documents']);
+  }
+
+  onSubmit(form: NgForm){
+    const value = form.value;
+    const newDocument = new Document(
+      '',
+      value.name,
+      value.description,
+      value.url,
+      []
+    );
+    if (this.editMode) {
+      this.documentService.updateDocument(this.originalDocument,newDocument);
+    }
+    else {
+      this.documentService.addDocument(newDocument);
+    }
+    this.router.navigate(['/documents'])
   }
 
 }
