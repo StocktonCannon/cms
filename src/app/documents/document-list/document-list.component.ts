@@ -15,23 +15,15 @@ export class DocumentListComponent implements OnInit {
 
   documents: Document[] = [];
 
-  constructor(private documentService: DocumentService,
-              private router: Router,
-              private route: ActivatedRoute) { }
+  constructor(private documentService: DocumentService) { }
 
   ngOnInit(): void {
-    this.documents = this.documentService.getDocuments();
-    this.documentService.documentChangedEvent.subscribe(
-      (documentArray:Document[]) => {
-        this.documents = documentArray;
-      });
-    
     this.subscription = this.documentService.documentListChangedEvent.subscribe(
       (documentsList: Document[]) => {
         this.documents = documentsList;
         console.log('subscribed')
-      }
-    )
+      });
+    this.documentService.getDocuments();
     
   }
 

@@ -1,7 +1,7 @@
-import { EventEmitter, Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { Contact } from './contact.model';
-import { MOCKCONTACTS } from './MOCKCONTACTS';
 
 @Injectable({
   providedIn: 'root'
@@ -12,21 +12,28 @@ export class ContactService {
 
   contactListChangedEvent = new Subject<Contact[]>();
 
-  contactSelectedEvent = new EventEmitter<Contact>();
-  contactChangedEvent = new EventEmitter<Contact[]>();
-
-
-  constructor() {
-    this.contacts = MOCKCONTACTS;
-    this.maxContactId = this.getMaxId();
-   }
+  constructor(private http: HttpClient) {}
 
   getContact(id: string): Contact {
     return this.contacts.find((contact) => contact.id == id);
   } 
 
-  getContacts(): Contact[] {
-    return this.contacts.sort((a,b) => a.name > b.name ? 1: b.name > a.name ? -1 : 0).slice();
+  getContacts() {
+    this.http.get("https://wdd430-1771d-default-rtdb.firebaseio.com/contacts.json")
+    .subscribe(
+      (contacts: Contact[]) => {
+        this.contacts = contacts;
+        this.maxContactId = this.getMaxId();
+
+        this.contacts.sort((a,b) =>
+          a.name > b.name ? 1 : b.name > a.name ? -1 : 0
+        );
+        this.contactListChangedEvent.next(this.contacts.slice());
+      },
+      (error: any) => {
+        console.log(error);
+      }
+    );
   }
   
   deleteContact(contact: Contact) {
@@ -38,7 +45,8 @@ export class ContactService {
        return;
     }
     this.contacts.splice(pos, 1);
-    this.contactChangedEvent.emit(this.contacts.slice());
+    
+    this.storeContacts();
  }
 
  getMaxId(): number {
@@ -63,9 +71,17 @@ addContact(newContact:Contact){
 
   this.contacts.push(newContact);
 
-  const contactsListClone = this.contacts.slice();
+  this.storeContacts();
+}
 
-  this.contactListChangedEvent.next(contactsListClone);
+storeContacts() {
+  let contacts = JSON.stringify(this.contacts);
+  const headers = new HttpHeaders({'Content-Type': 'application/json'});
+  this.http.put("https://wdd430-1771d-default-rtdb.firebaseio.com/contacts.json", contacts, {
+    headers: headers,
+  }).subscribe(() => {
+    this.contactListChangedEvent.next(this.contacts.slice());
+  });
 }
 
 updateContact(originalContact: Contact, newContact: Contact){
@@ -81,8 +97,7 @@ updateContact(originalContact: Contact, newContact: Contact){
 
   newContact.id = originalContact.id;
   this.contacts[pos] = newContact;
-  const contactsListClone = this.contacts.slice();
-  this.contactListChangedEvent.next(contactsListClone);
+  this.storeContacts();
 }
 
 }
