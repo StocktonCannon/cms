@@ -24,21 +24,22 @@ export class MessageService {
   }
 
   getMessages() {
-    this.http.get("https://wdd430-1771d-default-rtdb.firebaseio.com/messages.json")
+    this.http.get<{message: String, messages: Message[]}>("http://localhost:3000/messages")
   .subscribe(
-    (messages: Message[]) => {
-      this.messages = messages;
+    (messageData) => {
+      this.messages = messageData.messages;
       this.messageListChangedEvent.next(this.messages.slice());
     },
     (error: any) => {
       console.log(error);
+    
     }
   )  }
 
   storeMessages(){
     let messages = JSON.stringify(this.messages);
     const headers = new HttpHeaders({'Content-Type': 'application/json'});
-    this.http.put("https://wdd430-1771d-default-rtdb.firebaseio.com/messages.json", messages, {
+    this.http.put("http://localhost:3000/messages/", messages, {
     headers: headers,  
   }).subscribe(() => {
     this.messageListChangedEvent.next(this.messages.slice());
